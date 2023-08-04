@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      function flatten(inputArray) {
+        // Flatten the array
+        const flatArray = inputArray.flat(2); // The number 2 indicates the depth level to flatten
+
+        flatArray;
+        return flatArray;
+      }
+
+      function transpose(array) {
+        return array[0].map((_, i) => array.map((row) => row[i]));
+      }
+
+      async function fetchData(url) {
+        const response = await fetch(url);
+
+        // Check if the request was successful
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        } else {
+          const data = await response.json();
+          return flatten(data);
+        }
+      }
+    </script>
+  </body>
+</html>

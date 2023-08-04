@@ -2,7 +2,7 @@ from paddleocr import PaddleOCR
 from utils import is_english_compound_word, is_english_word, is_alpha_string
 
 def process_image(img_path, printable=False):
-    ocr = PaddleOCR(lang="en", show_log=False)
+    ocr = PaddleOCR(lang="en", show_log=False, use_angle_cls=False)
     result = ocr.ocr(img_path)
 
     items = []
@@ -11,11 +11,14 @@ def process_image(img_path, printable=False):
         for line in res:
             location, result = line
             word,confidence = result
+            word = word.strip()
             left_top,right_top,right_bottom,left_bottom = location
             x,y = left_top
-            # if is_alpha_string(word):
-            # print(word, is_english_word(word), is_english_compound_word(word), is_alpha_string(word))
-            if (is_english_compound_word(word) or is_english_word(word)) and is_alpha_string(word):
+            # print(word)
+            if is_alpha_string(word) and len(word) in [3,4]:
+                print(word, is_alpha_string(word), img_path)
+            # if is_english_compound_word(word) or is_english_word(word):
+            if is_alpha_string(word):
                 items.append((x, y, word))
 
     # Sort items by x-coordinate then y-coordinate
@@ -47,4 +50,4 @@ def process_image(img_path, printable=False):
     return page_words
 
 # process_image('test_images/29.png',True)
-# process_image('images/chapter3_test2/32.png',True)
+# process_image('images/chapter3/test4/40.png')

@@ -3,7 +3,7 @@ from paddleocr import PaddleOCR, draw_ocr # type: ignore
 # Paddleocr目前支持的多语言语种可以通过修改lang参数进行切换
 # 例如`ch`, `en`, `fr`, `german`, `korean`, `japan`
 ocr = PaddleOCR(lang="en", show_log=False)  # need to run only once to download and load model into memory
-img_path = 'images/chapter3_test2/32.png'
+img_path = 'images/chapter3/test4/40.png'
 result = ocr.ocr(img_path, cls=True)
 for idx in range(len(result)):
     res = result[idx]

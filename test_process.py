@@ -3,7 +3,7 @@ from process import process_image
 
 class TestProcessImage(unittest.TestCase):
     def test_process_image(self):
-        img_path = 'test_images/29.png'
+        img_path = 'images/chapter3/test1/29.png'
         expected_output = [
             ['beauty', 'bed', 'bedroom', 'bed sheet'], 
             ['bedsit', 'behaviors', 'belt', 'benefit'], 

@@ -15,105 +15,201 @@
         font-size: 2em;
         font-family: "Source Code Pro";
         width: 100%;
-        height: 800px;
+        height: 500px;
       }
       #results {
         color: #ff0000;
       }
     </style>
+    <script>
+      function flatten(inputArray) {
+        // Flatten the array
+        const flatArray = inputArray.flat(2); // The number 2 indicates the depth level to flatten
+
+        flatArray;
+        return flatArray;
+      }
+
+      function transpose(array) {
+        return array[0].map((_, i) => array.map((row) => row[i]));
+      }
+
+      async function fetchData(url) {
+        const response = await fetch(url);
+
+        // Check if the request was successful
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        } else {
+          const data = await response.json();
+          return flatten(data);
+        }
+      }
+    </script>
   </head>
   <body>
     <div class="container">
       <div class="mt-6 pt-6">
         <!-- <h1>雅思王听力语料库听写测试 Capter 3 横向测试</h1> -->
-        <hr />
+        <!-- <hr /> -->
       </div>
       <div class="row">
         <div class="col-8">
+          <div class="mb-3">
+            <label for="chapter" class="form-label">Chapter</label>
+            <select
+              id="chapter"
+              class="form-select form-select-lg mb-3"
+              aria-label="Default select example"
+            >
+              <option selected>Select chapter</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="test" class="form-label">Test</label>
+            <select
+              id="test"
+              class="form-select form-select-lg mb-3"
+              aria-label="Default select example"
+            >
+              <option selected>Select test</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </div>
           <textarea
             id="userInput"
             spellcheck="false"
             placeholder="每行一个单词"
           ></textarea>
+          <div class="mb-3 mt-3">
+            <button id="startButton" type="button" class="btn btn-primary">
+              Finish
+            </button>
+          </div>
         </div>
-        <div id="results" class="col"></div>
-      </div>
-      <div>
-        <button id="startButton" type="button" class="btn btn-primary">
-          Start Test
-        </button>
+        <div class="col mt-3">
+          <div>
+            <span>Score</span>
+            <span id="score"></span>
+          </div>
+          <div>
+            <span>Accuracy</span>
+            <span id="accuracy"></span>
+          </div>
+          <hr>
+          <div id="wrong"></div>
+          <table class="table" id="wrong_table"></table>
+        </div>
+        <!-- <div id="results" class="col mt-3"></div> -->
       </div>
     </div>
 
     <script>
-      // prettier-ignore
-      const CAPTER_3_TEST_1_HORIZON_PAGE_1_FRONT_SIDE = [
-        "ability", "abstract", "accountant", "accuracy",
-        "acid", "action", "activity", "actor",
-        "adult", "adventure", "advertisements", "advertising",
-        "advice", "age", "agency", "agreement",
-        "agriculture", "aid", "aim", "air",
-        "allergy", "alley", "allowance", "alteration",
-        "altitude", "ambition", "ambulance", "amount",
-        "analysis", "analyst", "anger", "animal",
-        "ankle", "answer", "Antarctica", "ape"
-      ];
-      // prettier-ignore
-      const CAPTER_3_TEST_1_HORIZON_PAGE_1_BACK_SIDE = [
-        "appearance", "architect", "architectures", "area",
-        "argument", "aristocrat", "army", "art",
-        "article", "aspirin", "assignment", "atlas",
-        "audience", "auditorium", "author", "authority",
-        "average", "award", "bachelor", "background",
-        "bacteria", "badge", "badminton", "backpack",
-        "baldness", "band", "bandage", "bands",
-        "bank", "banquet", "base", "basement",
-        "bases", "basis", "bath", "batteries",
-        "battery", "beach", "beard", "beats"
-      ];
-      // prettier-ignore
-      const CAPTER_3_TEST_1_HORIZON_PAGE_2_FRONT_SIDE = [
-        "beauty", "bed", "bedroom", "bed sheet",
-        "bedsit", "behaviors", "belt", "benefit",
-        "beverage", "bibliography", "bicycle", "bill",
-        "biologist", "bird", "birth", "blanket",
-        "blast", "block", "blouse", "board",
-        "boarder", "boat", "bone", "bowl",
-        "bowling", "branch", "breakfast", "brick",
-        "bridge", "brochures", "building", "bungalow",
-        "burger", "burglar", "bus", "cab"
-      ];
-
-      const CAPTER_3_TEST_1_HORIZON =
-        CAPTER_3_TEST_1_HORIZON_PAGE_1_FRONT_SIDE.concat(
-          CAPTER_3_TEST_1_HORIZON_PAGE_1_BACK_SIDE
-        ).concat(CAPTER_3_TEST_1_HORIZON_PAGE_2_FRONT_SIDE);
-
+      var CHAPTER_WORDS;
+      var chapter;
+      var test;
       const startButton = document.getElementById("startButton");
       const userInput = document.getElementById("userInput");
       const results = document.getElementById("results");
+      const score = document.getElementById("score");
+      const accuracy = document.getElementById("accuracy");
+      const wrong = document.getElementById("wrong");
+      const clean = document.getElementById("clean");
+      // Get the select elements
+      var chapterSelect = document.getElementById("chapter");
+      var testSelect = document.getElementById("test");
 
-      startButton.addEventListener("click", () => {
+      // Fetch data function
+      function fetchDataIfReady() {
+        if (chapter && test) {
+          // Only fetch if both chapter and test are defined
+          fetchData(`/words/chapter${chapter}/test${test}.json`)
+            .then((data) => (CHAPTER_WORDS = data))
+            .catch((error) =>
+              console.error(
+                "There has been a problem with your fetch operation: ",
+                error
+              )
+            );
+        }
+      }
+
+      // Add event listeners for the 'change' event
+      chapterSelect.addEventListener("change", function () {
+        console.log("Chapter selected: " + this.value);
+        chapter = this.value;
+        fetchDataIfReady();
+      });
+
+      testSelect.addEventListener("change", function () {
+        console.log("Test selected: " + this.value);
+        test = this.value;
+        fetchDataIfReady();
+      });
+
+      var right = 0;
+      var wrongLst = [];
+      startButton.addEventListener("click", () => {        
+        // get table element
+        let table = document.getElementById('wrong_table');
+
         const user_input = userInput.value.split("\n");
-        let right = 0;
-        let wrong = [];
         for (let index = 0; index < user_input.length; index++) {
           const word = user_input[index].trim();
-          if (word === CAPTER_3_TEST_1_HORIZON[index]) {
+          if (word === CHAPTER_WORDS[index]) {
             right += 1;
           } else {
-            wrong.push([word, CAPTER_3_TEST_1_HORIZON[index]]);
+            wrongLst.push([word, CHAPTER_WORDS[index]]);
           }
         }
-        let percentage = (right / CAPTER_3_TEST_1_HORIZON.length) * 100;
-        results.innerHTML = `Score: ${right}/${
-          CAPTER_3_TEST_1_HORIZON.length
-        } ${percentage.toFixed(2)}%`;
+        let percentage = (right / CHAPTER_WORDS.length) * 100;
+        accuracy.innerHTML = `${percentage.toFixed(2)}%`;
+        score.innerHTML = `${right}/${CHAPTER_WORDS.length}`;
 
-        wrong.forEach((w) => {
-          results.innerHTML += `<br>wrong: ${w[0]} => ${w[1]}`;
-        });
+        if (wrongLst.length > 0) {
+          // Create table headers
+          let thead = document.createElement('thead');
+          let headerRow = document.createElement('tr');
+          let header1 = document.createElement('th');
+          let header2 = document.createElement('th');
+          header1.innerText = 'Your Word';
+          header2.innerText = 'Correct Word';
+          headerRow.appendChild(header1);
+          headerRow.appendChild(header2);
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+  
+          // Create table body
+          let tbody = document.createElement('tbody');
+          wrongLst.forEach((w) => {
+            let row = document.createElement('tr');
+            let cell1 = document.createElement('td');
+            let cell2 = document.createElement('td');
+  
+            cell1.innerHTML = `<strike>${w[0]}</strike>`;
+            cell2.innerText = w[1];
+  
+            row.appendChild(cell1);
+            row.appendChild(cell2);
+            tbody.appendChild(row);
+          });
+          table.appendChild(tbody);
+        }
+
+        right = 0;
+        wrongLst = [];
       });
+
     </script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
