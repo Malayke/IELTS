@@ -34,22 +34,75 @@ def is_english_compound_word(compound_word):
 def has_multiple_uppercase(s):
     return sum(1 for c in s if c.isupper()) > 1
 
-def is_alpha_string(s: str):
-    # Return False if the string is empty
-    if not s or s == ' ':
+def is_alpha_word(s: str):
+    if '[' in s or ']' in s:
         return False
-    if has_multiple_uppercase(s):
+    
+    if s in ['a', 'an', 'be', 'to', 'of', 'at', 'as', 'in', 'on', 'do', 'up', 'go', 'no']:
+        return True
+    
+    if len(s) < 3:
         return False
-    # detect like `zjH` `vJt` incorrect words 
-    if sum(1 for c in s[1:] if c.isupper()) > 0:
-        return False
-    # Check if every word in the string is an English letter
-    words = s.split()
+    
     if s.endswith("'s"):
-        words = s[:-2].split()
-    for word in words:
-        if not word.isalpha() or len(word) < 3:
+        s = s.replace("'s", "")
+    
+    if '-' in s:
+        slash_splited_word = s.split('-')
+        for s in slash_splited_word:
+            if not is_alpha_word(s):
+                return False
+    else:
+        words = s.split()
+
+        if len(words) == 1 and not s.isalpha():
             return False
+
+        if len(words) == 1 and s.isupper() and is_english_word(s):
+            return True
+
+        if len(words) == 1 and has_multiple_uppercase(s):
+            return False
+        
+        # Return False if the string is empty
+        if not s or s == ' ':
+            return False
+        
+        # detect like `zjH` `vJt` incorrect words 
+        if ' ' not in s and sum(1 for c in s[1:] if c.isupper()) > 0:
+            return False
+    
+    return True
+    
+
+def is_alpha_string(s: str):
+    
+    if not is_alpha_word(s):
+        return False
+    
+    if "'s" in s:
+        s = s.replace("'s", "")
+    
+
+    words = s.split()
+
+    
+    if len(words) > 1:
+        for word in words:
+
+            if '-' in word:
+                slash_splited_word = word.split('-')
+                for s in slash_splited_word:
+                    if not is_alpha_word(s):
+                        return False
+                
+            if "'s" in word:
+                word = word.replace("'s","")
+            word = word.strip()
+            if word.startswith('(') and word.endswith(')'):
+                word = word[1:-1]
+            if not is_alpha_word(word):
+                return False
     return True
 
 def save_to_file(lst, filename):
@@ -67,4 +120,4 @@ def atoi(text):
 def natural_keys(text):
     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
 
-# print(is_english_word('cleaner'))
+# print(is_alpha_string("government-funded"))

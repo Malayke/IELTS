@@ -14,9 +14,9 @@ def process_image(img_path, printable=False):
             word = word.strip()
             left_top,right_top,right_bottom,left_bottom = location
             x,y = left_top
-            # print(word)
-            if is_alpha_string(word) and len(word) in [3,4]:
-                print(word, is_alpha_string(word), img_path)
+            # print(word, is_alpha_string(word))
+            # if is_alpha_string(word) and len(word) in [3,4]:
+            #     print(word, is_alpha_string(word), img_path)
             # if is_english_compound_word(word) or is_english_word(word):
             if is_alpha_string(word):
                 items.append((x, y, word))
@@ -50,4 +50,4 @@ def process_image(img_path, printable=False):
     return page_words
 
 # process_image('test_images/29.png',True)
-# process_image('images/chapter3/test4/40.png')
+# process_image('/Users/merdan.aziz/IELTS/IELTS/images/chapter5/test1/90.png', True)

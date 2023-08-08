@@ -19,6 +19,7 @@ def generate_words_data(chapter, test):
     chapter_words = []
 
     for f in files:
+        print(f"[*] processing {f}")
         output = process_image(str(f))
         
         chapter_words.append(output)
@@ -30,8 +31,8 @@ def generate_words_data(chapter, test):
 
     save_to_file(chapter_words, output_location)
 
-chapter = 3
-tests = [1,2,3,4,5,6,7,8,9]
+chapter = 4
+tests = [1,2,3]
 
 for test in tests:
     generate_words_data(chapter=chapter,test=test)
