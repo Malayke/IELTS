@@ -107,8 +107,8 @@
         </div>
         <div class="col mt-3">
           <div class="mt-5 mb-3 h4">
-            <span>Score</span>
-            <span id="score"></span>
+            Right: <span id="rightCount"></span>
+            Wrong: <span id="wrongCount"></span>
           </div>
           <div class="mt-5 mb-3 h4">
             <span>Accuracy</span>
@@ -132,7 +132,11 @@
       const score = document.getElementById("score");
       const accuracy = document.getElementById("accuracy");
       const wrong = document.getElementById("wrong");
+      const wrongCount = document.getElementById("wrongCount");
+      const rightCount = document.getElementById("rightCount");
+
       const clean = document.getElementById("clean");
+
       // Get the select elements
       var chapterSelect = document.getElementById("chapter");
       var testSelect = document.getElementById("test");
@@ -141,7 +145,7 @@
       function fetchDataIfReady() {
         if (chapter && test) {
           // Only fetch if both chapter and test are defined
-          fetchData(`/words/chapter${chapter}/test${test}.json`)
+          fetchData(`/IELTS/words/chapter${chapter}/test${test}.json`)
             .then((data) => (CHAPTER_WORDS = data))
             .catch((error) =>
               console.error(
@@ -185,15 +189,16 @@
         }
         let percentage = (right / CHAPTER_WORDS.length) * 100;
         accuracy.innerHTML = `${percentage.toFixed(2)}%`;
-        score.innerHTML = `${right}/${CHAPTER_WORDS.length}`;
-
+        // score.innerHTML = `${right}/${CHAPTER_WORDS.length}`;
+        wrongCount.innerText = wrongLst.length;
+        rightCount.innerText = right;
         if (wrongLst.length > 0) {
           // Create table headers
           let thead = document.createElement("thead");
           let headerRow = document.createElement("tr");
           let header1 = document.createElement("th");
           let header2 = document.createElement("th");
-          header1.innerText = "Your Word";
+          header1.innerText = "Wrong Word";
           header2.innerText = "Correct Word";
           headerRow.appendChild(header1);
           headerRow.appendChild(header2);
