@@ -3,7 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Bootstrap demo</title>
+    <title>IELTS Listening</title>
+    <link
+      rel="shortcut icon"
+      href="https://ielts.idp.com/favicon.ico"
+      type="image/x-icon"
+    />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -125,6 +130,17 @@
                 >
                   View Words
                 </button>
+                <button
+                  id="wrongWordCollapseBtn"
+                  class="btn btn-info"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapseExample"
+                  aria-expanded="false"
+                  aria-controls="collapseExample"
+                >
+                  View Wrong Words
+                </button>
               </p>
               <div class="collapse" id="collapseExample">
                 <div id="collapseContent" class="card card-body"></div>
@@ -150,7 +166,7 @@
             </button>
           </div>
         </div>
-        <div class="col mt-3">
+        <div class="col mt-3" id="leftSide" style="display: none">
           <div class="mt-5 mb-3 h4">
             Right: <span id="rightCount"></span> Wrong:
             <span id="wrongCount"></span>
@@ -179,9 +195,10 @@
       const wrong = document.getElementById("wrong");
       const wrongCount = document.getElementById("wrongCount");
       const rightCount = document.getElementById("rightCount");
-
-      const clean = document.getElementById("clean");
-
+      const leftSide = document.getElementById("leftSide");
+      const wrongWordCollapseBtn = document.getElementById(
+        "wrongWordCollapseBtn"
+      );
       // Get the select elements
       var chapterSelect = document.getElementById("chapter");
       var testSelect = document.getElementById("test");
@@ -190,27 +207,15 @@
       var collapse = document.getElementById("collapseContent");
       const collapseBtn = document.getElementById("collapseBtn");
       const wordAudio = document.getElementById("wordAudio");
-      
+
       function say(word) {
         var wordAudioSource = document.getElementById("wordAudioSource");
-        wordAudioSource.src = "http://wooordhunt.ru/data/sound/sow/uk/" + word + ".mp3";
+        wordAudioSource.src =
+          "http://wooordhunt.ru/data/sound/sow/uk/" + word + ".mp3";
         wordAudio.load();
         wordAudio.play();
       }
-
-      function createAudio(word) {
-        const audio = doc.createElement("audio");
-        audio.src =
-          "http://wooordhunt.ru/data/sound/sow/" + accent + "/" + word + ".mp3";
-        audio.volume = 0.5;
-        audio.setAttribute("type", "audio/mpeg");
-        return audio;
-      }
-
-      function loadAudio(data) {
-        audioSource.src = `/IELTS/Audios/chapter${chapter}/Test${test}.mp3`;
-        audio.load();
-        audio.style.display = "block";
+      function loadWords(data) {
         collapseBtn.disabled = false;
         var table = document.createElement("table");
         table.className = "table"; // Add Bootstrap table class for styling
@@ -221,10 +226,11 @@
         data.forEach(function (item) {
           var cell = document.createElement("td");
           cell.textContent = item;
+          // cell.className = "mt-3 mb-3";
           row.appendChild(cell);
           count++;
 
-          if (count % 6 === 0) {
+          if (count % 4 === 0) {
             // After every 6 items, start a new row
             table.appendChild(row);
             row = document.createElement("tr"); // Create a new row
@@ -235,8 +241,13 @@
         if (row.hasChildNodes()) {
           table.appendChild(row);
         }
-
+        collapse.innerHTML = "";
         collapse.appendChild(table);
+      }
+      function loadAudio(data) {
+        audioSource.src = `/IELTS/Audios/chapter${chapter}/Test${test}.mp3`;
+        audio.load();
+        audio.style.display = "block";
       }
       // Fetch data function
       function fetchDataIfReady() {
@@ -246,6 +257,7 @@
             .then((data) => {
               CHAPTER_WORDS = data;
               loadAudio(data);
+              loadWords(data);
               loadClickPlayAudio();
             })
             .catch((error) =>
@@ -257,11 +269,6 @@
         }
       }
 
-      function getSelectedWord() {
-        const word = window.getSelection().toString().trim().toLowerCase();
-        const test = /^[a-z]+$/.test(word);
-        return Boolean(word) && test ? word : null;
-      }
       function loadClickPlayAudio() {
         const wordTable = document.getElementById("wordTable");
         wordTable.addEventListener("dblclick", function (event) {
@@ -286,8 +293,33 @@
         fetchDataIfReady();
       });
 
+      wrongWordCollapseBtn.addEventListener("click", () => {
+        localStorageChapterAttemptCount = `chapter${chapter}test${test}attemptCount`;
+        chapterAttemptCount = JSON.parse(
+          localStorage.getItem(localStorageChapterAttemptCount)
+        );
+        if (chapterAttemptCount) {
+          localStorageWrongWords = `chapter${chapter}test${test}WrongWords`;
+          WrongWords = JSON.parse(localStorage.getItem(localStorageWrongWords));
+          // Convert the nested array to a string of HTML
+          var htmlString = WrongWords
+            .map(function (subArray, index) {
+              return (
+                "<p>" + "Attempt " + (Number(index)+1).toString() + ": " + subArray.join(", ") + "</p>"
+              );
+            })
+            .join("");
+
+          collapse.innerHTML = htmlString;
+        }
+      });
+      collapseBtn.addEventListener("click", () => {
+        loadWords(CHAPTER_WORDS);
+      });
+
       var right = 0;
       var wrongLst = [];
+      var wrongWords = [];
       startButton.addEventListener("click", () => {
         if (wrong.firstChild != null) {
           wrong.firstChild.remove();
@@ -301,8 +333,37 @@
           if (word === CHAPTER_WORDS[index]) {
             right += 1;
           } else {
-            wrongLst.push([word, CHAPTER_WORDS[index]]);
+            wrongLst.push([word, `${index + 1}. ${CHAPTER_WORDS[index]}`]);
+            wrongWords.push(word);
           }
+        }
+        localStorageWrongWords = `chapter${chapter}test${test}WrongWords`;
+        var savedWrongWords = JSON.parse(
+          localStorage.getItem(localStorageWrongWords)
+        );
+        if (savedWrongWords) {
+          savedWrongWords.push(wrongWords);
+          localStorage.setItem(
+            localStorageWrongWords,
+            JSON.stringify(savedWrongWords)
+          );
+        } else {
+          localStorage.setItem(
+            localStorageWrongWords,
+            JSON.stringify([wrongWords])
+          );
+        }
+        localStorageChapterAttemptCount = `chapter${chapter}test${test}attemptCount`;
+        var attemptCount = parseInt(
+          localStorage.getItem(localStorageChapterAttemptCount)
+        );
+        if (attemptCount) {
+          localStorage.setItem(
+            localStorageChapterAttemptCount,
+            attemptCount + 1
+          );
+        } else {
+          localStorage.setItem(localStorageChapterAttemptCount, 1);
         }
         let percentage = (right / CHAPTER_WORDS.length) * 100;
         accuracy.innerHTML = `${percentage.toFixed(2)}%`;
@@ -329,7 +390,7 @@
             let cell1 = document.createElement("td");
             let cell2 = document.createElement("td");
 
-            cell1.innerHTML = `<strike>${w[0]}</strike>`;
+            cell1.innerHTML = `<span style="color:red;">${w[0]}</span>`;
             cell2.innerText = w[1];
 
             row.appendChild(cell1);
@@ -342,6 +403,8 @@
 
         right = 0;
         wrongLst = [];
+        wrongWords = [];
+        leftSide.style.display = "block";
       });
     </script>
     <script
