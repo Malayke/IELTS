@@ -115,6 +115,14 @@
               >
                 <source id="wordAudioSource" src="#" />
               </audio>
+              <audio
+                controls
+                class="embed-responsive-item"
+                style="display: none"
+                id="sentenceAudio"
+              >
+                <source id="sentenceAudioSource" src="#" />
+              </audio>
             </div>
             <div class="mb-3 mt-3">
               <p>
@@ -140,6 +148,9 @@
                   aria-controls="collapseExample"
                 >
                   View Wrong Words
+                </button>
+                <button id="playSentences" class="btn btn-info">
+                  Play Sentences
                 </button>
               </p>
               <div class="collapse" id="collapseExample">
@@ -199,6 +210,7 @@
       const wrongWordCollapseBtn = document.getElementById(
         "wrongWordCollapseBtn"
       );
+      const playSentences = document.getElementById("playSentences");
       // Get the select elements
       var chapterSelect = document.getElementById("chapter");
       var testSelect = document.getElementById("test");
@@ -215,6 +227,9 @@
         wordAudio.load();
         wordAudio.play();
       }
+      /* 
+      load words table 
+      */
       function loadWords(data) {
         collapseBtn.disabled = false;
         var table = document.createElement("table");
@@ -256,7 +271,7 @@
           fetchData(`/IELTS/words/chapter${chapter}/test${test}.json`)
             .then((data) => {
               CHAPTER_WORDS = data;
-              loadAudio(data);
+              // loadAudio(data);
               loadWords(data);
               loadClickPlayAudio();
             })
@@ -272,6 +287,7 @@
       function loadClickPlayAudio() {
         const wordTable = document.getElementById("wordTable");
         wordTable.addEventListener("dblclick", function (event) {
+          console.log("table double clicked!");
           // Check if the clicked element is a TD
           if (event.target.tagName === "TD") {
             // Log the text content of the clicked cell
@@ -302,13 +318,16 @@
           localStorageWrongWords = `chapter${chapter}test${test}WrongWords`;
           WrongWords = JSON.parse(localStorage.getItem(localStorageWrongWords));
           // Convert the nested array to a string of HTML
-          var htmlString = WrongWords
-            .map(function (subArray, index) {
-              return (
-                "<p>" + "Attempt " + (Number(index)+1).toString() + ": " + subArray.join(", ") + "</p>"
-              );
-            })
-            .join("");
+          var htmlString = WrongWords.map(function (subArray, index) {
+            return (
+              "<p>" +
+              "Attempt " +
+              (Number(index) + 1).toString() +
+              ": " +
+              subArray.join(", ") +
+              "</p>"
+            );
+          }).join("");
 
           collapse.innerHTML = htmlString;
         }
@@ -317,6 +336,31 @@
         loadWords(CHAPTER_WORDS);
       });
 
+      const sentenceAudioSource = document.getElementById(
+        "sentenceAudioSource"
+      );
+      const sentenceAudio = document.getElementById("sentenceAudio");
+      function playSentence(word) {
+        sentenceAudioSource.src = `/IELTS/sentences/chapter${chapter}/test${test}/${word}.wav`;
+        sentenceAudio.load();
+        sentenceAudio.oncanplaythrough = () => {
+          sentenceAudio.play();
+        };
+      }
+
+      let index = 0;
+      playSentences.addEventListener("click", () => {
+        sentenceAudio.style.display = "block";
+        playSentence(CHAPTER_WORDS[index]);
+        sentenceAudio.onended = () => {
+          setTimeout(() => {
+            index++;
+            if (index < CHAPTER_WORDS.length) {
+              playSentence(CHAPTER_WORDS[index]);
+            }
+          }, 5000); // 5000 milliseconds = 5 seconds
+        };
+      });
       var right = 0;
       var wrongLst = [];
       var wrongWords = [];
